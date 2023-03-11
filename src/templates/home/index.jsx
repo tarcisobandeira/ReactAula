@@ -5,13 +5,15 @@ import './styles.css';
 import { loadPosts } from '../../utils/load-posts'
 import { Button } from '../../components/Button';
 import { Posts } from '../../components/Posts';
+import { SearchInput } from '../../components/TextInput';
 
 export class Home extends Component {
   state = {
     posts: [],
     allPosts: [],
     page: 0,
-    postPerPage: 2
+    postPerPage: 20,
+    searchValue: ''
   };
 
   async componentDidMount() {
@@ -42,17 +44,44 @@ export class Home extends Component {
     this.setState({ posts, page: nextPage });
   }
 
+  handleChange = (e) => {
+    const { value } = e.target;
+    this.setState({ searchValue: value });
+  }
+
   render() {
-    const { posts } = this.state;
+    const { posts, page, postPerPage, allPosts, searchValue } = this.state;
+    const noMorePosts = page + postPerPage >= allPosts.length;
+
+    const filteredPosts = !!searchValue ? allPosts.filter(post => {
+      return post.title.toLowerCase().includes(searchValue.toLowerCase());
+    }) : posts;
 
     return (
       <section className='container'>
-        <Posts posts={posts} />
+        <div className='search-container'>
+          {!!searchValue && (
+            <h1>Search Value: {searchValue}</h1>
+          )}
+          <SearchInput
+            onChange={this.handleChange}
+            value={searchValue}
+          />
+        </div>
+        {filteredPosts.length > 0 && (
+          <Posts posts={filteredPosts} />
+        )}
+        {filteredPosts.length === 0 && (
+          <p>Não existem posts</p>
+        )}
+
         <div className='button-container'>
-          <Button 
-          text="load" 
-          onClick={this.loadMorePosts}
-          disabled={true} />
+          {!searchValue && (
+            <Button
+              text="load"
+              onClick={this.loadMorePosts}
+              disabled={noMorePosts} />
+          )}
         </div>
       </section>
     );
